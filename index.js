@@ -21,7 +21,7 @@ app.use((req,res, next)=>{
 
 //Conecção com o banco de dados
 mongoose
-    .connect(process.env.DATABASE_URL)
+    .connect(process.env.MONGODB_URI)
     .then(()=>console.log('Conenctado ao MongoDB!!!'))
     .catch((err)=>console.log(err));
 
