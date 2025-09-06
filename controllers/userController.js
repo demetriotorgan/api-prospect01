@@ -41,3 +41,12 @@ module.exports.logarUsuario = async(req,res)=>{
         res.status(500).json({msg:'Erro no servidor'});
     }
 };
+
+module.exports.listarUsuarios = async(req,res)=>{
+try {
+    const usuarios = await User.find().exec();
+    res.status(200).json(usuarios);
+} catch (error) {
+    res.status(500).json({msg:'Erro ao listar usuários'});
+}
+};
