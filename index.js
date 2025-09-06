@@ -5,6 +5,7 @@ const cors = require('cors');
 
 //Rotas
 const usuarioRoutes = require('./routes/userRoutes');
+const nichoRoutes = require('./routes/nichoRoutes');
 
 //MiddleWares
 const app = express();
@@ -26,6 +27,6 @@ mongoose
     .catch((err)=>console.log(err));
 
 //Rotas
-app.use('/', usuarioRoutes);
+app.use('/', usuarioRoutes, nichoRoutes);
 
 app.listen(PORT, ()=>console.log( `Rodando na porta ${PORT}`));
