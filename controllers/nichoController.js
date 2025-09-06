@@ -5,9 +5,13 @@ module.exports.adicionarNicho = async(req,res)=>{
     const {tipo} = req.body;
 
     try {
-        const nicho = new Nicho({tipo});
-        await nicho.save();
+        const nichoExistente = await Nicho.findOne({tipo});
+        if(nichoExistente) return res.status(400).json({msg:'Nicho já existente'});
+        
+        const novoNicho = new Nicho({tipo});
+        await novoNicho.save();
         res.status(201).json({msg:'Nicho cadastrado com sucesso'});
+        
     } catch (error) {
         res.status(500).json({msg:'Erro ao cadastrar nicho'});
     }
