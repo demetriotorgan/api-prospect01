@@ -37,3 +37,12 @@ module.exports.adicionarListaEmpresas = async(req,res)=>{
         res.status(500).json({msg:'Erro ao cadastrar'});
     }
 };
+
+module.exports.listarEmpresas = async(req,res)=>{
+    try {
+        const empresas = await Estabelecimento.find().exec();
+        res.status(200).json(empresas);
+    } catch (err) {
+        res.status(200).json({msg:'Erro ao exibir empresas salvas'});
+    }
+};
