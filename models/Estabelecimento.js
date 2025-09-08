@@ -7,6 +7,7 @@ const EmpresaSchema = new mongoose.Schema({
   telefone: { type: String },
   site: { type: String },
   cidade: { type: String, required: true, index: true },
+  bairro: {type:String },
   estado: { type: String, required: true, index: true },
   statusAtual: {
     type: String,
