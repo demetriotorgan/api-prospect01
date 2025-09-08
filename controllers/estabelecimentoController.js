@@ -47,3 +47,12 @@ module.exports.listarEmpresas = async(req,res)=>{
         res.status(200).json({msg:'Erro ao exibir empresas salvas'});
     }
 };
+
+module.exports.apagarListaEmpresas = async(req,res)=>{
+    try {
+        await Estabelecimento.deleteMany({});
+        res.status(200).json({msg:'Lista de empresas salvas deletada com sucesso'});
+    } catch (err) {
+        res.status(500).json({msg:'Erro ao apagar lista de empresas'});
+    }
+};
