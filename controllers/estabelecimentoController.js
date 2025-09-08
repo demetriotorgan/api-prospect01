@@ -10,7 +10,7 @@ module.exports.adicionarListaEmpresas = async(req,res)=>{
     try {
         const resultados = [];
         for(const est of estabelecimentos){
-            const {nome, tipo, endereco, telefone, site, cidade, estado, statusAtual} = est;
+            const {nome, tipo, endereco, telefone, site, cidade, bairro, estado, statusAtual} = est;
             
             const estabelecimentoExiste = await Estabelecimento.findOne({nome});
 
@@ -24,6 +24,7 @@ module.exports.adicionarListaEmpresas = async(req,res)=>{
                     telefone, 
                     site, 
                     cidade, 
+                    bairro,
                     estado, 
                     statusAtual
                 });
