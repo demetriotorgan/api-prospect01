@@ -7,4 +7,5 @@ router.post('/salvar-lista-empresas', adicionarListaEmpresas);
 router .get('/listar-empresas', listarEmpresas);
 router.delete('/apagar-lista-empresas', apagarListaEmpresas);
 router.post('/verificar-empresas', verificarEmpresas);
+
 module.exports = router;

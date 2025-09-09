@@ -22,12 +22,25 @@ app.use((req,res, next)=>{
   });
 
 //Conecção com o banco de dados
-mongoose
-    .connect(process.env.MONGODB_URI)
-    .then(()=>console.log('Conenctado ao MongoDB!!!'))
-    .catch((err)=>console.log(err));
+let isConnected = false;
+
+async function connectDB() {
+  if (isConnected) return;
+
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    isConnected = true;
+    console.log("MongoDB conectado!!");
+  } catch (error) {
+    console.error("Erro ao conectar MongoDB:", error);
+    throw error;
+  }
+}
 
 //Rotas
 app.use('/', usuarioRoutes, nichoRoutes, empresasRoutes);
 
-app.listen(PORT, ()=>console.log( `Rodando na porta ${PORT}`));
+// Inicia servidor só depois de conectar ao banco
+connectDB().then(() => {
+  app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+});
