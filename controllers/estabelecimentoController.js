@@ -56,3 +56,25 @@ module.exports.apagarListaEmpresas = async(req,res)=>{
         res.status(500).json({msg:'Erro ao apagar lista de empresas'});
     }
 };
+
+module.exports.verificarEmpresas = async(req,res)=>{
+    try {
+        const {telefones} = req.body;
+        if(!Array.isArray(telefones)){
+            return res.status(400).json({erro:'Lista de telefones inválida'});
+        }
+
+        const empresasExistentes = await Estabelecimento.find({
+            telefone:{$in: telefones},
+        }).select("nome telefone");
+
+        res.json({
+            existentes: empresasExistentes.map((e)=>({
+                nome: e.nome,
+                telefone: e.telefone,
+            })),
+        });
+    } catch (err) {
+        res.status(500).json({erro:'Erro ao verificar empresas'});
+    }
+};
