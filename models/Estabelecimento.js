@@ -12,15 +12,14 @@ const EmpresaSchema = new mongoose.Schema({
   statusAtual: {
     type: String,
     enum: [
-      "não-prospectado",
-      "não-atendeu",      
-      "ligou-mas-não-era-o-dono",
-      "ligou-sem-interesse",
-      "ligou-e-pediu-retorno",
-      "ligou-e-agendou-reunião",
-      "ligou-mas-não-falou-com-responsável"
+      "nao-prospectado", 
+      "ligou-nao-era-dono", 
+      "ligou-sem-interesse", 
+      "ligou-pediu-retorno", 
+      "ligou-agendou-reuniao", 
+      "ligou-nao-respondeu"
     ],
-    default: "não-prospectado",
+    default: "nao-prospectado",
     index: true
   }
 });
