@@ -7,6 +7,7 @@ const cors = require('cors');
 const usuarioRoutes = require('./routes/userRoutes');
 const nichoRoutes = require('./routes/nichoRoutes');
 const empresasRoutes = require('./routes/estabelecimentoRoutes');
+const prospecRoutes = require('./routes/prospecRoutes');
 
 //MiddleWares
 const app = express();
@@ -38,7 +39,12 @@ async function connectDB() {
 }
 
 //Rotas
-app.use('/', usuarioRoutes, nichoRoutes, empresasRoutes);
+app.use('/', 
+    usuarioRoutes, 
+    nichoRoutes, 
+    empresasRoutes, 
+    prospecRoutes
+);
 
 // Inicia servidor só depois de conectar ao banco
 connectDB().then(() => {
