@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const UserProspec = require('../models/prospecUser');
 
 //Registra novo usuário
 module.exports.adicionarUsuario = async(req,res)=>{
@@ -49,4 +50,25 @@ try {
 } catch (error) {
     res.status(500).json({msg:'Erro ao listar usuários'});
 }
+};
+
+//------ProspecUser - Acumulador de tempo de prospeção
+module.exports.atualizarTempoProspec = async(req,res)=>{
+    try {
+        const {userID, tempoProspec} = req.body;
+
+        if (!userID) {
+            return res.status(400).json({ msg: 'Usuário não informado' });
+        }
+
+        if(!tempoProspec || tempoProspec < 0){
+            return res.status(400).json({msg:'Tempo inválido'});
+        }
+        
+        await UserProspec.atualizarProspec(userID, tempoProspec);
+        res.json({msg:'Tempo de prospecção atualizado com sucesso'});
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({msg:'Erro ao atualizar tempo de prospecção'});
+    }
 };

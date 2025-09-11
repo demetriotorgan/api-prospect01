@@ -1,5 +1,5 @@
 const express = require('express');
-const { adicionarUsuario, logarUsuario, listarUsuarios } = require('../controllers/userController');
+const { adicionarUsuario, logarUsuario, listarUsuarios, atualizarTempoProspec } = require('../controllers/userController');
 const authMidleware = require('../midlleware/authMidleware');
 const { usuarioLogado } = require('../controllers/meController');
 const router = express.Router();
@@ -13,5 +13,8 @@ router.get('/listar-usuarios', listarUsuarios);
 
 //Usario logado
 router.get('/me', authMidleware, usuarioLogado);
+
+//rota para atualizar tempo de prospecção
+router.post('/tempo-prospec', atualizarTempoProspec);
 
 module.exports = router;
