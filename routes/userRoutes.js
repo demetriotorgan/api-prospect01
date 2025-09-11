@@ -16,6 +16,6 @@ router.get('/me', authMidleware, usuarioLogado);
 
 //rota para atualizar tempo de prospecção
 router.post('/tempo-prospec', atualizarTempoProspec);
-router.get('/tempo-gasto-prospec/userID', tempoDeProspec);
+router.get('/tempo-gasto-prospec/:userID', tempoDeProspec);
 
 module.exports = router;
