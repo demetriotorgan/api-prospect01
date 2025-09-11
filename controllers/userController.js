@@ -72,3 +72,12 @@ module.exports.atualizarTempoProspec = async(req,res)=>{
         res.status(500).json({msg:'Erro ao atualizar tempo de prospecção'});
     }
 };
+
+module.exports.tempoDeProspec = async(req,res)=>{
+    try {
+        const tempoGasto = await UserProspec.find().exec();
+        res.status(200).json({tempoGasto});
+    } catch (error) {        
+        res.status(500).json({msg:'Erro ao buscar tempo de prospeção'});
+    }
+};
