@@ -75,8 +75,12 @@ module.exports.atualizarTempoProspec = async(req,res)=>{
 
 module.exports.tempoDeProspec = async(req,res)=>{
     try {
-        const tempoGasto = await UserProspec.find().exec();
-        res.status(200).json({tempoGasto});
+        const userID = req.params.userID;
+        const tempoGasto = await UserProspec.findOne({userID}).exec();
+        if(!tempoGasto){
+            return res.status(400).json({msg:'Usuário não encontrado'});
+        }
+        res.status(200).json(tempoGasto);
     } catch (error) {        
         res.status(500).json({msg:'Erro ao buscar tempo de prospeção'});
     }
