@@ -26,3 +26,19 @@ module.exports.listarNichos = async(req,res)=>{
     res.status(500).json({mes:'Erro ao listar nichos'});
  }   
 };
+
+//deletar nicho
+module.exports.deletarNicho = async(req,res)=>{
+    try {
+        const {id} = req.params;
+        const nicho = await Nicho.findById(id);
+        if(!nicho){
+            return res.status(404).json({msg:'Nicho não encontrado'});
+        }
+        await Nicho.findByIdAndDelete(id);
+        return res.status(200).json({msg:'Nicho deletado com sucesso'});
+    } catch (error) {
+        console.error('Erro ao deletar nicho', error);
+        return res.status(500).json({erro:'Erro interno no servidor'});
+    }
+};  

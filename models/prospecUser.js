@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const ProspecUserSchema = new mongoose.Schema({
     userID:{type: mongoose.Schema.Types.ObjectId, ref:"Usuario", required:true, unique:true},
     tempoProspec:{type:Number, default:0},
-    totalProspec:{type:Number, default:0}
+    totalProspec:{type:Number, default:0},
 });
 
 ProspecUserSchema.statics.atualizarProspec = async function(userID, tempoGasto){
