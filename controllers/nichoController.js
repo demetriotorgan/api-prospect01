@@ -10,7 +10,7 @@ module.exports.adicionarNicho = async(req,res)=>{
         
         const novoNicho = new Nicho({tipo});
         await novoNicho.save();
-        res.status(201).json({msg:'Nicho cadastrado com sucesso'});
+        res.status(201).json(novoNicho);
         
     } catch (error) {
         res.status(500).json({msg:'Erro ao cadastrar nicho'});
