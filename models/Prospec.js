@@ -19,6 +19,7 @@ const ProspecSchema = new mongoose.Schema({
   },
 
   // observações livres do vendedor
+  nicho: {type:String},
   observacao: { type: String, default: "" },
   tempoGasto: { type: Number, default: 0 },   
   criadoEm: { type: Date, default: Date.now },  

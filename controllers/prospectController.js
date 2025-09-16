@@ -6,24 +6,22 @@ module.exports.adicionarProspeccao = async(req,res)=>{
     const {
         empresaId, 
         usuarioId, 
-        indicador, 
+        indicador,
+        nicho, 
         observacao, 
-        tempoGasto, 
-        criadoEm, 
-        atualizadoEm, 
+        tempoGasto,         
         interesse, 
         retornoAgendado, 
-        funil} = req.body;
+        funil} = req.body;    
 
     try {
         const novaProspec = new Prospec({
             empresaId, 
             usuarioId, 
             indicador, 
+            nicho,
             observacao, 
-            tempoGasto, 
-            criadoEm, 
-            atualizadoEm, 
+            tempoGasto,             
             interesse, 
             retornoAgendado, 
             funil
@@ -49,4 +47,22 @@ module.exports.adicionarProspeccao = async(req,res)=>{
     } catch (error) {
         res.status(500).json({msg:'Erro ao cadastrar prospecção'});
     };
+};
+
+module.exports.apagarListaProspec = async(req,res)=>{
+  try {
+    const resultado = await Prospec.deleteMany({});
+    res.status(200).json({msg:'Prospecções excluidas com sucesso'});
+  } catch (error) {
+    res.status(500).json({msg:'Erro ao excluir registros'});
+  }
+};
+
+module.exports.listarProspec = async(req,res)=>{
+    try {
+        const listaProspec = await Prospec.find().exec();
+        res.status(200).json(listaProspec);
+    } catch (error) {
+        res.status(500).json({msg:'Erro ao buscar lista de empresas prospecctadas'});
+    }
 };
