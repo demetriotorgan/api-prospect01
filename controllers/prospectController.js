@@ -66,3 +66,21 @@ module.exports.listarProspec = async(req,res)=>{
         res.status(500).json({msg:'Erro ao buscar lista de empresas prospecctadas'});
     }
 };
+
+//----Exibi o ultimo registro de um nicho----
+module.exports.ultimoRegistroPorNicho = async(req, res)=>{
+  try {
+    const nicho = req.params.nicho;
+    const ultimoRegistro = await Prospec.findOne({ nicho })
+      .sort({ criadoEm: -1 })
+      .select('criadoEm');
+
+       if (!ultimoRegistro) {
+      return res.status(404).json({ msg: 'Nenhum registro encontrado para esse nicho' });
+    }
+
+    res.status(200).json({ ultimoRegistro: ultimoRegistro.criadoEm });
+  } catch (error) {
+    res.status(500).json({ msg: 'Erro ao buscar último registro', erro: error.message });
+  }
+};
