@@ -1,5 +1,5 @@
 const Prospec = require('../models/Prospec');
-
+const Usuario = require('../models/User');
 // Função auxiliar para calcular dias restantes
 function calcularDiasRestantes(dataAgendada) {
   const hoje = new Date();
