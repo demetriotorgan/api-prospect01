@@ -36,8 +36,10 @@ try {
 module.exports.getAgendaProximos7Dias = async(req,res)=>{
 try {
     const hoje = new Date();
-    const seteDiasDepois = new Date();
+    hoje.setHours(0,0,0,0);
+    const seteDiasDepois = new Date(hoje);
     seteDiasDepois.setDate(hoje.getDate() + 7);
+    seteDiasDepois.setHours(23,59,59,999);
 
     const agenda = await Prospec.find({
       retornoAgendado: {

@@ -4,6 +4,6 @@ const { getAgenda, getAgendaProximos7Dias } = require('../controllers/agendaCont
 const router = express.Router();
 
 router.get('/agenda', getAgenda);
-router.get('/agenda/proximos-7dias', getAgendaProximos7Dias);
+router.get('/agenda/proximos-7-dias', getAgendaProximos7Dias);
 
-export default router;
+module.exports = router;
