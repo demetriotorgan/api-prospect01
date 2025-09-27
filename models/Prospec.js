@@ -36,4 +36,13 @@ ProspecSchema.pre("save", function(next) {
   next();
 });
 
+ProspecSchema.index({ indicador: 1 });
+ProspecSchema.index({ retornoAgendado: 1 });
+ProspecSchema.index({ usuarioId: 1, indicador: 1 }); 
+ProspecSchema.index({ usuarioId: 1, retornoAgendado: 1 });
+ProspecSchema.index({ funil: 1 });
+ProspecSchema.index({ funil: 1, indicador: 1 });
+ProspecSchema.index({ funil: 1, usuarioId: 1 });
+ProspecSchema.index({ nicho: 1, interesse: -1 });
+
 module.exports = mongoose.model("Prospec", ProspecSchema);

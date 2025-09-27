@@ -8,6 +8,7 @@ const usuarioRoutes = require('./routes/userRoutes');
 const nichoRoutes = require('./routes/nichoRoutes');
 const empresasRoutes = require('./routes/estabelecimentoRoutes');
 const prospecRoutes = require('./routes/prospecRoutes');
+const agendamentosRoutes = require('./routes/agendaRoutes')
 
 //MiddleWares
 const app = express();
@@ -43,7 +44,8 @@ app.use('/',
     usuarioRoutes, 
     nichoRoutes, 
     empresasRoutes, 
-    prospecRoutes
+    prospecRoutes,
+    agendamentosRoutes
 );
 
 // Inicia servidor só depois de conectar ao banco
