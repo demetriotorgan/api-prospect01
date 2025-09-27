@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const ProspecSchema = new mongoose.Schema({
   empresaId: { type: mongoose.Schema.Types.ObjectId, ref: "Empresa", required: true },
+  nomeEmpresa: {type:String, default:""},
   usuarioId: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario", required: true },
 
   // status inicial (indicador de prospecção)

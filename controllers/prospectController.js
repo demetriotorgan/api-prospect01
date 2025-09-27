@@ -5,6 +5,7 @@ const Empresa = require('../models/Estabelecimento');
 module.exports.adicionarProspeccao = async(req,res)=>{
     const {
         empresaId, 
+        nomeEmpresa,
         usuarioId, 
         indicador,
         nicho, 
@@ -18,6 +19,7 @@ module.exports.adicionarProspeccao = async(req,res)=>{
     try {
         const novaProspec = new Prospec({
             empresaId, 
+            nomeEmpresa,
             usuarioId, 
             indicador, 
             nicho,
