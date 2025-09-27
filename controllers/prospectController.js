@@ -14,6 +14,7 @@ module.exports.adicionarProspeccao = async(req,res)=>{
         interesse, 
         retornoAgendado, 
         dataTime,
+        telefone,
         funil} = req.body;    
 
     try {
@@ -28,6 +29,7 @@ module.exports.adicionarProspeccao = async(req,res)=>{
             interesse, 
             retornoAgendado, 
             dataTime,
+            telefone,
             funil
         });
         await novaProspec.save();

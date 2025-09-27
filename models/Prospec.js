@@ -28,6 +28,7 @@ const ProspecSchema = new mongoose.Schema({
   interesse: { type: Number, min: 0, max: 5, default: 0 },
   retornoAgendado: { type: Date, default: null },
   dataTime:{type:Date, defatult:""},
+  telefone:{type:Date, default:""},
   funil: { type: String, enum: ["topo", "meio", "fundo"], default: "topo" }
 });
 
