@@ -62,7 +62,9 @@ module.exports.apagarListaProspec = async(req,res)=>{
 
 module.exports.listarProspec = async(req,res)=>{
     try {
-        const listaProspec = await Prospec.find().exec();
+        const listaProspec = await Prospec.find()
+        .sort({createdAt: -1})
+        .exec();
         res.status(200).json(listaProspec);
     } catch (error) {
         res.status(500).json({msg:'Erro ao buscar lista de empresas prospecctadas'});
