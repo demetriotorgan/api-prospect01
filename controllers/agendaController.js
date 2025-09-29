@@ -1,19 +1,32 @@
 const Prospec = require('../models/Prospec');
 const Usuario = require('../models/User');
+const { differenceInDays, formatDistance, isBefore } = require("date-fns");
+const { ptBR } = require("date-fns/locale");
+
+
 // Função auxiliar para calcular dias restantes
-function calcularDiasRestantes(dataAgendada) {
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0); // zerar horas para comparar só datas
+function calcularDiasRestantes(reuniao) {
+  const agora = new Date();
 
-  const agendada = new Date(dataAgendada);
-  agendada.setHours(0, 0, 0, 0);
+  // Se tiver dataTime, ele é prioridade
+  const dataReferencia = reuniao.dataTime
+    ? new Date(reuniao.dataTime)
+    : new Date(reuniao.retornoAgendado);
 
-  const diffTime = agendada - hoje;
-  const diffDias = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  // Caso já tenha passado
+  if (isBefore(dataReferencia, agora)) {
+    return "Atrasada";
+  }
 
-  if (diffDias === 0) return "hoje";
-  if (diffDias > 0) return `${diffDias} dia(s)`;
-  return "atrasado"; // caso a data já tenha passado
+  // Diferença em dias inteiros
+  const dias = differenceInDays(dataReferencia, agora);
+
+  if (dias === 0) {
+    // Reunião é hoje → mostrar tempo restante em horas/minutos
+    return "hoje (" + formatDistance(dataReferencia, agora, { locale: ptBR }) + ")";
+  }
+
+  return `${dias} dia(s)`;
 }
 
 module.exports.getAgenda = async(req,res)=>{
@@ -67,7 +80,7 @@ module.exports.getAgendaProximos7Dias = async (req, res) => {
       const usuario = usuariosMap[item.usuarioId.toString()] || {};
       return {
         ...item.toObject(),
-        diasRestantes: calcularDiasRestantes(item.retornoAgendado),
+        diasRestantes: calcularDiasRestantes(item),
         usuarioNome: usuario.email || "Usuário não encontrado"
       };
     });
