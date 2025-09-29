@@ -41,29 +41,30 @@ module.exports.getAgendaProximos7Dias = async (req, res) => {
     seteDiasDepois.setDate(hoje.getDate() + 7);
     seteDiasDepois.setHours(23, 59, 59, 999);
 
-    // Buscar agenda dos próximos 7 dias
+    // Buscar apenas agendamentos de reunião dentro do período
     const agenda = await Prospec.find({
+      indicador: "ligou-agendou-reuniao",
       retornoAgendado: {
         $gte: hoje,
         $lte: seteDiasDepois
       }
-    }).sort({ retornoAgendado: 1, criadoEm: -1 });
+    }).sort({ criadoEm: -1 }); // ordenar por mais recente
 
     // Extrair todos os usuarioIds da agenda
     const usuarioIds = agenda.map(item => item.usuarioId);
-    
+
     // Buscar os usuários correspondentes
     const usuarios = await Usuario.find({ _id: { $in: usuarioIds } });
 
     // Transformar em objeto para acesso rápido
     const usuariosMap = {};
     usuarios.forEach(u => {
-      usuariosMap[u._id] = u;
+      usuariosMap[u._id.toString()] = u;
     });
 
     // Mapear resultado incluindo o nome/email do usuário
     const resultado = agenda.map(item => {
-      const usuario = usuariosMap[item.usuarioId] || {};
+      const usuario = usuariosMap[item.usuarioId.toString()] || {};
       return {
         ...item.toObject(),
         diasRestantes: calcularDiasRestantes(item.retornoAgendado),
