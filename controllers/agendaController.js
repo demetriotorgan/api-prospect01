@@ -47,7 +47,7 @@ module.exports.getAgendaProximos7Dias = async (req, res) => {
         $gte: hoje,
         $lte: seteDiasDepois
       }
-    }).sort({ retornoAgendado: 1 });
+    }).sort({ retornoAgendado: 1, criadoEm: -1 });
 
     // Extrair todos os usuarioIds da agenda
     const usuarioIds = agenda.map(item => item.usuarioId);

@@ -69,7 +69,7 @@ module.exports.apagarListaProspec = async(req,res)=>{
 module.exports.listarProspec = async(req,res)=>{
     try {
         const listaProspec = await Prospec.find()
-        .sort({createdAt: -1})
+        .sort({criadoEm: -1})
         .exec();
         res.status(200).json(listaProspec);
     } catch (error) {
