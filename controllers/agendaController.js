@@ -3,28 +3,59 @@ const Usuario = require('../models/User');
 const { differenceInDays, formatDistance, isBefore } = require("date-fns");
 const { ptBR } = require("date-fns/locale");
 
+function startOfDayUTC(date) {
+  const d = new Date(date);
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+}
 
 // Função auxiliar para calcular dias restantes
 function calcularDiasRestantes(reuniao) {
-const agora = new Date();
+  const agora = new Date();
 
-  // Prioriza dataTime se existir
-  const dataReferencia = reuniao.dataTime
-    ? new Date(reuniao.dataTime)
-    : new Date(reuniao.retornoAgendado);
+  // preferir retornoAgendado (dia) para o cálculo de dias
+  const retornoRaw = reuniao.retornoAgendado ? new Date(reuniao.retornoAgendado) : null;
+  const dataTimeRaw  = reuniao.dataTime ? new Date(reuniao.dataTime) : null;
 
-  if (isBefore(dataReferencia, agora)) {
-    return "Atrasada";
+  // se não houver data alguma
+  const referenciaDia = retornoRaw || dataTimeRaw;
+  if (!referenciaDia || isNaN(referenciaDia.getTime())) return "Data inválida";
+
+  // calcular diferença de dias usando midnight UTC
+  const inicioRetorno = startOfDayUTC(referenciaDia);
+  const inicioAgora   = startOfDayUTC(agora);
+
+  const milDias = 24 * 60 * 60 * 1000;
+  const diffDays = Math.round((inicioRetorno.getTime() - inicioAgora.getTime()) / milDias);
+
+  // se já passou o dia inteiro (diff < 0)
+  if (diffDays < 0) {
+    // usar dataTime para calcular quanto tempo já passou, se disponível
+    const referenciaTempo = dataTimeRaw || retornoRaw;
+    if (!referenciaTempo || isNaN(referenciaTempo.getTime())) return "Atrasada";
+    const ago = formatDistance(referenciaTempo, agora, { locale: ptBR });
+    return `Atrasada (há ${ago})`;
   }
 
-  const dias = differenceInDays(dataReferencia, agora);
+  // se é hoje (mesmo dia)
+  if (diffDays === 0) {
+    // se houver hora exata (dataTime), comparar agora com essa hora
+    const referenciaTempo = dataTimeRaw || retornoRaw;
+    if (!referenciaTempo || isNaN(referenciaTempo.getTime())) return "hoje";
 
-  if (dias === 0) {
-    return "hoje (" + formatDistance(dataReferencia, agora, { locale: ptBR }) + ")";
+    if (isBefore(referenciaTempo, agora)) {
+      const ago = formatDistance(referenciaTempo, agora, { locale: ptBR });
+      return `Atrasada (há ${ago})`;
+    } else {
+      const restante = formatDistance(referenciaTempo, agora, { locale: ptBR });
+      return `hoje (${restante})`;
+    }
   }
 
-  return `${dias} dia(s)`
+  // futuro (diffDays > 0)
+  return `${diffDays} dia(s)`;
 }
+
 
 module.exports.getAgenda = async(req,res)=>{
 try {
@@ -44,15 +75,19 @@ try {
 };
 
 module.exports.getAgendaProximos7Dias = async (req, res) => {
-try {
+  try {
     const hoje = new Date();
-    hoje.setHours(23, 59, 59, 999);
+    hoje.setUTCHours(0, 0, 0, 0);
 
-    // Buscar todos os agendamentos até hoje
+    const seteDiasDepois = new Date();
+    seteDiasDepois.setDate(seteDiasDepois.getDate() + 7);
+    seteDiasDepois.setHours(23, 59, 59, 999); // final do dia daqui a 7 dias
+
+    // Buscar todos os agendamentos de hoje até 7 dias
     const agenda = await Prospec.find({
       indicador: "ligou-agendou-reuniao",
-      retornoAgendado: { $lte: hoje } // todos até hoje
-    }).sort({ criadoEm: -1 }); // mais recentes primeiro
+      retornoAgendado: { $gte: hoje, $lte: seteDiasDepois }
+    }).sort({ retornoAgendado: 1 }); // ordena pela data do agendamento
 
     // Buscar usuários correspondentes
     const usuarioIds = Array.from(new Set(agenda.map(item => item.usuarioId.toString())));
