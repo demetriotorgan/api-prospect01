@@ -1,39 +1,5 @@
 const Prospec = require('../models/Prospec');
 const Usuario = require('../models/User');
-const { ptBR } = require("date-fns/locale");
-const { differenceInCalendarDays, formatDistance, isBefore, startOfDay } = require("date-fns");
-
-
-function startOfDayUTC(date) {
-  const d = new Date(date);
-  d.setUTCHours(0, 0, 0, 0);
-  return d;
-}
-
-function calcularDiasRestantes(reuniao) {
-  const agora = new Date();
-  const retornoRaw = reuniao.retornoAgendado ? new Date(reuniao.retornoAgendado) : null;
-  const dataTimeRaw = reuniao.dataTime ? new Date(reuniao.dataTime) : null;
-
-  const referenciaDia = retornoRaw || dataTimeRaw;
-  if (!referenciaDia || isNaN(referenciaDia.getTime())) return "Data inválida";
-
-  const inicioRetorno = startOfDayUTC(referenciaDia);
-  const inicioAgora = startOfDayUTC(agora);
-
-  const diffDays = Math.round((inicioRetorno - inicioAgora) / (1000*60*60*24));
-
-  if (diffDays < 0) {
-    const ago = formatDistance(referenciaDia, agora, { locale: ptBR });
-    return `Atrasada (há ${ago})`;
-  }
-  if (diffDays === 0) {
-    const restante = formatDistance(referenciaDia, agora, { locale: ptBR });
-    return `hoje (${restante})`;
-  }
-
-  return diffDays === 1 ? "amanhã" : `${diffDays} dias`;
-};
 
 
 module.exports.getAgenda = async (req, res) => {
@@ -108,42 +74,47 @@ module.exports.getAgenda = async (req, res) => {
 
 module.exports.getAgendaProximos7Dias = async (req, res) => {
   try {
-    // Definir datas limite (UTC não é mais necessário, usamos calendário local)
-    const hojeUTC = new Date();
-hojeUTC.setUTCHours(0,0,0,0);
+    const pad = (n) => String(n).padStart(2, "0");
 
+    const hoje = new Date();
+    const hojeStr = `${hoje.getFullYear()}-${pad(hoje.getMonth()+1)}-${pad(hoje.getDate())}`;
 
-    const seteDiasDepoisUTC = new Date();
-seteDiasDepoisUTC.setUTCDate(seteDiasDepoisUTC.getUTCDate()+7);
-seteDiasDepoisUTC.setUTCHours(23,59,59,999);
+    const seteDiasDepois = new Date();
+    seteDiasDepois.setDate(seteDiasDepois.getDate() + 7);
+    const seteDiasDepoisStr = `${seteDiasDepois.getFullYear()}-${pad(seteDiasDepois.getMonth()+1)}-${pad(seteDiasDepois.getDate())}`;
 
-    // Buscar agendamentos nos próximos 7 dias
     const agenda = await Prospec.find({
-  indicador: "ligou-agendou-reuniao",
-  retornoAgendado: { $gte: hojeUTC, $lte: seteDiasDepoisUTC }
-});
-
-    // Buscar usuários correspondentes
-    const usuarioIds = Array.from(new Set(agenda.map(item => item.usuarioId).filter(Boolean)));
-    const usuarios = await Usuario.find({ _id: { $in: usuarioIds } });
-    const usuariosMap = {};
-    usuarios.forEach(u => {
-      usuariosMap[u._id.toString()] = u;
+      indicador: "ligou-agendou-reuniao",
+      retornoAgendado: {
+        $gte: hojeStr,
+        $lte: seteDiasDepoisStr
+      }
     });
 
-    // Mapear resultado incluindo diasRestantes e nome do usuário
-    const resultado = agenda.map(item => {
+    const usuarioIds = Array.from(new Set(agenda.map((item) => item.usuarioId).filter(Boolean)));
+    const usuarios = await Usuario.find({ _id: { $in: usuarioIds } });
+    const usuariosMap = {};
+    usuarios.forEach((u) => (usuariosMap[u._id.toString()] = u));
+
+    const resultado = agenda.map((item) => {
       const usuario = item.usuarioId ? usuariosMap[item.usuarioId.toString()] : null;
+
+      let diasRestantes = "";
+      const retorno = new Date(item.retornoAgendado);
+      const diffDias = Math.round((retorno - new Date(hojeStr)) / (1000*60*60*24));
+
+      if (diffDias === 0) diasRestantes = "Hoje";
+      else if (diffDias > 0) diasRestantes = `${diffDias} dia${diffDias > 1 ? "s" : ""}`;
+
       return {
         ...item.toObject(),
-        diasRestantes: calcularDiasRestantes(item),
-        usuarioNome: usuario ? (usuario.email || usuario.nome || "Usuário não encontrado") : "Usuário não encontrado"
+        diasRestantes,
+        usuarioNome: usuario ? usuario.email || usuario.nome || "Usuário não encontrado" : "Usuário não encontrado"
       };
     });
 
     res.status(200).json(resultado);
-
-  } catch (err) {
+  } catch(err) {
     console.error(err);
     res.status(500).json({ error: "Erro ao buscar agenda" });
   }
