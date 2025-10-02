@@ -2,69 +2,106 @@ const Prospec = require('../models/Prospec');
 const Usuario = require('../models/User');
 
 
+// getAgenda com comparação por timezone (default: America/Sao_Paulo)
 module.exports.getAgenda = async (req, res) => {
   try {
-    const hoje = new Date();
-    const hojeUTCStart = new Date(Date.UTC(hoje.getUTCFullYear(), hoje.getUTCMonth(), hoje.getUTCDate()));
+    const timeZone = req.query.timeZone || 'America/Sao_Paulo';
+
+    // retorna 'YYYY-MM-DD' no timezone pedido
+    const ymdNoTZ = (date) => {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(date); // ex: "2025-10-01"
+    };
+
+    // transforma "YYYY-MM-DD" em Date UTC midnight (00:00:00Z) — consistente para diferenças de dias
+    const ymdParaUTCStart = (ymd) => {
+      const [y, m, d] = ymd.split('-').map(Number);
+      return new Date(Date.UTC(y, m - 1, d)); // 00:00:00 UTC desse YMD
+    };
+
+    // hoje no timezone escolhido (string Y-M-D) e seu UTC-start correspondente
+    const hojeYMD = ymdNoTZ(new Date());
+    const hojeUTCStart = ymdParaUTCStart(hojeYMD);
 
     const docs = await Prospec.find({
       indicador: "ligou-agendou-reuniao",
       retornoAgendado: { $ne: null }
     }).lean();
 
+    // map inicial: pega retorno, valida e normaliza para YMD no timezone
     const items = docs.map(item => {
-      const retornoDate = item.retornoAgendado ? new Date(item.retornoAgendado) : null;
-      const retornoValido = retornoDate && !isNaN(retornoDate.getTime());
+      const retornoDateRaw = item.retornoAgendado ? new Date(item.retornoAgendado) : null;
+      const retornoValido = retornoDateRaw && !isNaN(retornoDateRaw.getTime());
 
+      let retornoYMD = null;
       let retornoUTCStart = null;
       if (retornoValido) {
-        retornoUTCStart = new Date(Date.UTC(
-          retornoDate.getUTCFullYear(),
-          retornoDate.getUTCMonth(),
-          retornoDate.getUTCDate()
-        ));
+        retornoYMD = ymdNoTZ(retornoDateRaw); // data no timezone (YYYY-MM-DD)
+        retornoUTCStart = ymdParaUTCStart(retornoYMD); // midnight UTC para comparar por dias
       }
 
-      const isDelayed = retornoValido ? retornoUTCStart < hojeUTCStart : true;
+      const isDelayed = retornoValido ? (retornoUTCStart < hojeUTCStart) : true;
 
-      return { ...item, retornoDate: retornoUTCStart, retornoValido, isDelayed };
+      return {
+        ...item,
+        retornoDateRaw,
+        retornoValido,
+        retornoYMD,
+        retornoUTCStart,
+        isDelayed
+      };
     });
 
+    // separar e ordenar
     const naoAtrasados = items.filter(i => !i.isDelayed);
     const atrasados = items.filter(i => i.isDelayed);
 
-    // Ordenação
-    naoAtrasados.sort((a, b) => a.retornoDate - b.retornoDate || new Date(b.criadoEm) - new Date(a.criadoEm));
+    naoAtrasados.sort((a, b) => a.retornoUTCStart - b.retornoUTCStart || new Date(b.criadoEm) - new Date(a.criadoEm));
     atrasados.sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
     const ordered = [...naoAtrasados, ...atrasados];
 
+    // buscar usuarios
     const usuarioIds = Array.from(new Set(ordered.map(i => i.usuarioId).filter(Boolean).map(id => id.toString())));
     const usuarios = usuarioIds.length ? await Usuario.find({ _id: { $in: usuarioIds } }).lean() : [];
     const usuariosMap = {};
     usuarios.forEach(u => { usuariosMap[u._id.toString()] = u; });
 
+    // montar resultado final (diasRestantes calculado com base em retornoUTCStart e hojeUTCStart)
+    const MS_P_DIA = 1000 * 60 * 60 * 24;
     const resultado = ordered.map(item => {
       const usuario = item.usuarioId ? usuariosMap[item.usuarioId.toString()] : null;
 
       let diasRestantes = "";
-      if (item.isDelayed) {
+      if (item.retornoValido) {
+        if (item.retornoUTCStart < hojeUTCStart) {
+          diasRestantes = "atrasado";
+        } else if (item.retornoUTCStart.getTime() === hojeUTCStart.getTime()) {
+          diasRestantes = "hoje";
+        } else {
+          const diffDias = Math.floor((item.retornoUTCStart - hojeUTCStart) / MS_P_DIA);
+          diasRestantes = diffDias === 1 ? "amanhã" : `${diffDias} dias`;
+        }
+      } else {
         diasRestantes = "atrasado";
-      } else if (item.retornoValido) {
-        const diffDias = Math.floor((item.retornoDate - hojeUTCStart) / (1000 * 60 * 60 * 24));
-        if (diffDias === 0) diasRestantes = "hoje";
-        else if (diffDias === 1) diasRestantes = "amanhã";
-        else diasRestantes = `${diffDias} dias`;
       }
 
       return {
         ...item,
+        retornoAgendadoOriginal: item.retornoAgendado,
+        retornoYMD: item.retornoYMD,
+        retornoDate: item.retornoUTCStart, // midnight UTC do YMD
+        retornoValido: item.retornoValido,
+        isDelayed: item.retornoValido ? (item.retornoUTCStart < hojeUTCStart) : true,
         diasRestantes,
         usuarioNome: usuario ? (usuario.email || usuario.nome || "Usuário não encontrado") : "Usuário não encontrado"
       };
     });
 
     res.json(resultado);
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Erro ao buscar agenda" });
@@ -74,48 +111,85 @@ module.exports.getAgenda = async (req, res) => {
 
 module.exports.getAgendaProximos7Dias = async (req, res) => {
   try {
-    const pad = (n) => String(n).padStart(2, "0");
+    const timeZone = 'America/Sao_Paulo'; // ou receba via req.query.timeZone
+    const MS_P_DIA = 1000 * 60 * 60 * 24;
 
-    const hoje = new Date();
-    const hojeStr = `${hoje.getFullYear()}-${pad(hoje.getMonth()+1)}-${pad(hoje.getDate())}`;
+    // extrai YYYY-MM-DD no timezone pedido
+    const ymdNoTZ = (date) => {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(date); // ex: "2025-10-01"
+    };
 
-    const seteDiasDepois = new Date();
-    seteDiasDepois.setDate(seteDiasDepois.getDate() + 7);
-    const seteDiasDepoisStr = `${seteDiasDepois.getFullYear()}-${pad(seteDiasDepois.getMonth()+1)}-${pad(seteDiasDepois.getDate())}`;
+    const ymdToUTCStart = (ymd) => {
+      const [y, m, d] = ymd.split('-').map(Number);
+      return new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0)); // midnight UTC do YMD
+    };
 
+    // hoje no timezone do usuário (string e UTC-start)
+    const hojeYMD = ymdNoTZ(new Date());
+    const hojeUTCStart = ymdToUTCStart(hojeYMD);
+
+    // fim do 7º dia (UTC)
+    const seteDiasDepoisUTCEnd = new Date(hojeUTCStart);
+    seteDiasDepoisUTCEnd.setUTCDate(seteDiasDepoisUTCEnd.getUTCDate() + 7);
+    seteDiasDepoisUTCEnd.setUTCHours(23, 59, 59, 999);
+
+    // busca no banco com valores Date (UTC) corretos
     const agenda = await Prospec.find({
       indicador: "ligou-agendou-reuniao",
       retornoAgendado: {
-        $gte: hojeStr,
-        $lte: seteDiasDepoisStr
+        $gte: hojeUTCStart,
+        $lte: seteDiasDepoisUTCEnd
       }
-    });
+    }).lean();
 
-    const usuarioIds = Array.from(new Set(agenda.map((item) => item.usuarioId).filter(Boolean)));
-    const usuarios = await Usuario.find({ _id: { $in: usuarioIds } });
+    // buscar usuários
+    const usuarioIds = Array.from(new Set(agenda.map(i => i.usuarioId).filter(Boolean).map(id => id.toString())));
+    const usuarios = usuarioIds.length ? await Usuario.find({ _id: { $in: usuarioIds } }).lean() : [];
     const usuariosMap = {};
-    usuarios.forEach((u) => (usuariosMap[u._id.toString()] = u));
+    usuarios.forEach(u => { usuariosMap[u._id.toString()] = u; });
 
-    const resultado = agenda.map((item) => {
+    const resultado = agenda.map(item => {
       const usuario = item.usuarioId ? usuariosMap[item.usuarioId.toString()] : null;
 
-      let diasRestantes = "";
-      const retorno = new Date(item.retornoAgendado);
-      const diffDias = Math.round((retorno - new Date(hojeStr)) / (1000*60*60*24));
+      // pega retornoAgendado, extrai YMD no timezone do cliente e converte para UTC-start
+      const retornoRaw = item.retornoAgendado ? new Date(item.retornoAgendado) : null;
+      const retornoYMD = retornoRaw ? ymdNoTZ(retornoRaw) : null;
+      const retornoUTCStart = retornoYMD ? ymdToUTCStart(retornoYMD) : null;
 
-      if (diffDias === 0) diasRestantes = "Hoje";
-      else if (diffDias > 0) diasRestantes = `${diffDias} dia${diffDias > 1 ? "s" : ""}`;
+      const diffDias = retornoUTCStart ? Math.floor((retornoUTCStart - hojeUTCStart) / MS_P_DIA) : null;
+
+      let diasRestantes = "";
+      if (diffDias === 0) diasRestantes = "hoje";
+      else if (diffDias === 1) diasRestantes = "amanhã";
+      else if (diffDias > 1) diasRestantes = `${diffDias} dias`;
+      // (não inclui atrasados aqui porque a query já os exclui)
 
       return {
-        ...item.toObject(),
+        ...item,
         diasRestantes,
-        usuarioNome: usuario ? usuario.email || usuario.nome || "Usuário não encontrado" : "Usuário não encontrado"
+        usuarioNome: usuario ? (usuario.email || usuario.nome || "Usuário não encontrado") : "Usuário não encontrado"
       };
     });
 
+    // ordenar
+    resultado.sort((a, b) => new Date(a.retornoAgendado) - new Date(b.retornoAgendado));
+
     res.status(200).json(resultado);
-  } catch(err) {
+
+    console.log('timeZone', timeZone, 'hojeYMD', hojeYMD, 'hojeUTCStart', hojeUTCStart.toISOString(), 
+  'range', hojeUTCStart.toISOString(), seteDiasDepoisUTCEnd.toISOString());
+
+agenda.forEach(i => {
+  const r = new Date(i.retornoAgendado);
+  console.log(i._id, 'raw', i.retornoAgendado, 'retornoYMD', ymdNoTZ(r), 'retornoUTCStart', ymdToUTCStart(ymdNoTZ(r)).toISOString());
+});
+  } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Erro ao buscar agenda" });
+    res.status(500).json({ error: "Erro ao buscar agenda dos próximos 7 dias" });
   }
 };
