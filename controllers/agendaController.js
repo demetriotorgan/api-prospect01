@@ -259,12 +259,13 @@ module.exports.salvarAgendamento = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Erro ao salvar agendamento:", error);
+    console.error("❌ Erro ao salvar agendamento:", error);
     res.status(500).json({
-      success: false,
-      msg: "Erro ao salvar agendamento.",
-      error: error.message,
-    });
+    success: false,
+    msg: "Erro ao salvar agendamento.",
+    error: error.message,
+    stack: error.stack, // 🔎 adiciona para depurar
+});
   }
 };
 
