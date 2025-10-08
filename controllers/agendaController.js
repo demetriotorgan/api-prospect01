@@ -255,27 +255,10 @@ module.exports.salvarAgendamento = async (req, res) => {
     });
 
     await novoAgendamento.save();
-
-    const prospecAtualizado = await Prospec.findOneAndUpdate(
-      {empresaId},
-      {indicador: "encerrado", atualizadoEm: new Date()},
-      {new:true}
-    );
-
-    const empresaAtualizada = await Estabelecimento.findOneAndUpdate(
-      {_id: empresaId},
-      {statusAtual:"encerrado"},
-      {new:true}
-    );
-
+    
      return res.status(201).json({
       success: true,
-      msg: "Agendamento encerrado com sucesso.",
-      agendamento: novoAgendamento,
-      atualizacoes: {
-        prospecAtualizado: !!prospecAtualizado,
-        empresaAtualizada: !!empresaAtualizada,
-      },
+      msg: "Agendamento encerrado com sucesso.",     
     });
 
   } catch (error) {
