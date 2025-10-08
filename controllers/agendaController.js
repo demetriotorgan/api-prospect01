@@ -196,8 +196,44 @@ agenda.forEach(i => {
 };
 
 // ---------Salvar Agendamentos-------
-module.exports.salvarAgendamento = async(req,res)=>{
+const Agendamento = require('../models/Agendamento'); // ajuste o caminho conforme seu projeto
+
+module.exports.salvarAgendamento = async (req, res) => {
   const {
+    empresaId,
+    nomeEmpresa,
+    usuarioId,
+    usuarioNome,
+    criadoEm,
+    dataTime,
+    diasRestantes,
+    funil,
+    indicador,
+    interesse,
+    nicho,
+    observacao,
+    retornoAgendado,
+    site,
+    telefone,
+    tempoGasto,
+  } = req.body;
+
+  try {
+    // 🔎 1️⃣ Verifica se já existe agendamento com o mesmo empresaId
+    const agendamentoExistente = await Agendamento.findOne({ empresaId });
+
+    if (agendamentoExistente) {
+      return res
+        .status(409) // 409 = Conflict
+        .json({
+          success: false,
+          msg: "Agendamento já existe para esta empresa.",
+          empresaId: agendamentoExistente.empresaId,
+        });
+    }
+
+    // 🆕 2️⃣ Cria novo agendamento
+    const novoAgendamento = new Agendamento({
       empresaId,
       nomeEmpresa,
       usuarioId,
@@ -214,31 +250,32 @@ module.exports.salvarAgendamento = async(req,res)=>{
       site,
       telefone,
       tempoGasto,
-    } = req.body;
+    });
 
-  try {
-  const novoAgendamento = new Agendamento({
-     empresaId,
-      nomeEmpresa,
-      usuarioId,
-      usuarioNome,
-      criadoEm,
-      dataTime,
-      diasRestantes,
-      funil,
-      indicador,
-      interesse,
-      nicho,
-      observacao,
-      retornoAgendado,
-      site,
-      telefone,
-      tempoGasto,
-  });
-  await novoAgendamento.save();
-  res.status(201).json({msg:'Agendamento Cadastrado com sucesso'});
+    await novoAgendamento.save();
+
+    res.status(201).json({
+      success: true,
+      msg: "Agendamento cadastrado com sucesso.",
+      agendamento: novoAgendamento,
+    });
+
   } catch (error) {
-  res.status(500).json({msg:'Erro ao cadastrar agendamento'});
+    console.error("Erro ao cadastrar agendamento:", error);
+    res.status(500).json({
+      success: false,
+      msg: "Erro ao cadastrar agendamento.",
+      error: error.message,
+    });
   }
+};
 
+module.exports.excluirListaAgendamento = async(req,res)=>{
+try {
+  await Agendamento.deleteMany({});
+  res.status(200).json({msg:'Todos os agendamentos foram excluidos'});
+} catch (error) {
+  console.error(error);
+  res.status(500).json({msg:'Erro ao excluir agendamentos'});
+}  
 };
