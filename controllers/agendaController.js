@@ -201,23 +201,23 @@ module.exports.salvarAgendamento = async (req, res) => {
     empresaId,
     nomeEmpresa,
     usuarioId,
-    usuarioNome,
-    criadoEm,
-    dataTime,
-    diasRestantes,
-    funil,
     indicador,
-    interesse,
     nicho,
     observacao,
-    retornoAgendado,
-    site,
-    telefone,
     tempoGasto,
+    interesse,   
+    retornoAgendado,
+    dataTime,
+    telefone,    
+    site,
+    funil,        
     resultado,
     texto
   } = req.body;
 
+  if (!mongoose.Types.ObjectId.isValid(empresaId)) {
+  return res.status(400).json({ success: false, msg: "Formato de empresaId inválido." });
+}
   try {
     // 🔎 1️⃣ Verifica se já existe agendamento com o mesmo empresaId
     const agendamentoExistente = await Agendamento.findOne({ empresaId });
@@ -234,38 +234,35 @@ module.exports.salvarAgendamento = async (req, res) => {
 
     // 🆕 2️⃣ Cria novo agendamento
     const novoAgendamento = new Agendamento({
-      empresaId,
-      nomeEmpresa,
-      usuarioId,
-      usuarioNome,
-      criadoEm,
-      dataTime,
-      diasRestantes,
-      funil,
-      indicador,
-      interesse,
-      nicho,
-      observacao,
-      retornoAgendado,
-      site,
-      telefone,
-      tempoGasto,
-      resultado,
-      texto
+    empresaId,
+    nomeEmpresa,
+    usuarioId,
+    indicador,
+    nicho,
+    observacao,
+    tempoGasto,
+    interesse,   
+    retornoAgendado,
+    dataTime,
+    telefone,    
+    site,
+    funil,        
+    resultado,
+    texto
     });
 
     await novoAgendamento.save();
     
      return res.status(201).json({
       success: true,
-      msg: "Agendamento encerrado com sucesso.",     
+      msg: "Agendamento salvo com sucesso.",     
     });
 
   } catch (error) {
-    console.error("Erro ao encerrar agendamento:", error);
+    console.error("Erro ao salvar agendamento:", error);
     res.status(500).json({
       success: false,
-      msg: "Erro ao encerrar agendamento.",
+      msg: "Erro ao salvar agendamento.",
       error: error.message,
     });
   }
