@@ -82,12 +82,16 @@ module.exports.verificarEmpresas = async(req,res)=>{
 module.exports.exibirEmpresaPorId = async(req,res)=>{
 try {
     const {empresaId} = req.params;
+   
     if(!empresaId){
         return res.status(400).json({msg:'Parametro empresaId é obrigatório'});
     }
-    const empresaExistente = await Estabelecimento.findById({_id: empresaId})
+     if (!mongoose.Types.ObjectId.isValid(empresaId)) {
+  return res.status(400).json({ msg: "Formato de empresaId inválido" });
+}
+    const empresaExistente = await Estabelecimento.findById(empresaId)
     if(!empresaExistente){
-        return res.status(400).json({msg:'Nehuma empresa encontrada'});
+        return res.status(404).json({msg:'Nehuma empresa encontrada'});
     }
     return res.status(200).json(empresaExistente);
 } catch (error) {
