@@ -272,6 +272,17 @@ module.exports.salvarAgendamento = async (req, res) => {
   }
 };
 
+module.exports.listarAgendamentosSalvos = async(req,res)=>{
+try {
+  const listaAgendamentosSalvos = await Agendamento.find()
+  .sort({criadoEm:-1})
+  .exec();
+  res.status(200).json(listaAgendamentosSalvos)
+} catch (error) {
+  res.status(500).json({msg:'Erro ao listar agendamentos salvos'})
+}
+};
+
 module.exports.excluirListaAgendamento = async(req,res)=>{
 try {
   await Agendamento.deleteMany({});
