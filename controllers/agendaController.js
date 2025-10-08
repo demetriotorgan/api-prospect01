@@ -1,7 +1,7 @@
 const Prospec = require('../models/Prospec');
 const Usuario = require('../models/User');
 const Agendamento = require('../models/Agendamento')
-
+const Estabelecimento = require('../models/Estabelecimento');
 
 // getAgenda com comparação por timezone (default: America/Sao_Paulo)
 module.exports.getAgenda = async (req, res) => {
@@ -310,10 +310,35 @@ module.exports.excluirAgendamento = async(req,res)=>{
     });
   }
   //Exlcui o registro
-  await Agendamento.deleteOne({empresaId});
-  return res.status(200).json({
-    msg:'Agendamento excluido com sucesso'
-  });
+  const agendamentoDeletado = await Agendamento.deleteOne({empresaId});
+  const prospecDeletado = await Prospec.deleteOne({empresaId});
+  const empresaDeletada =  await Estabelecimento.deleteOne({_id: empresaId});
+
+  const resultado = {
+    success: true,
+      msg: 'Agendamento excluído com sucesso.',
+      empresaId,
+       detalhes: {
+        agendamentoRemovido: agendamentoDeletado.deletedCount > 0,
+        prospecRemovido: prospecDeletado.deletedCount > 0,
+        empresaRemovida: empresaDeletada.deletedCount > 0,
+      },
+  }
+
+  // 🔹 Feedback contextual
+     let mensagensExtras = [];
+    if (prospecDeletado.deletedCount === 0)
+      mensagensExtras.push("Nenhum registro correspondente encontrado em Prospec.");
+    else mensagensExtras.push("Registro correspondente em Prospec também excluído.");
+
+    if (empresaDeletada.deletedCount === 0)
+      mensagensExtras.push("Nenhum registro correspondente encontrado em Empresa.");
+    else mensagensExtras.push("Registro correspondente em Empresa também excluído.");
+
+    resultado.msg += " " + mensagensExtras.join(" ");
+
+    return res.status(200).json(resultado);
+
  } catch (error) {
   console.error("❌ Erro ao excluir agendamento:", error);
     return res.status(500).json({
