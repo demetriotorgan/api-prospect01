@@ -27,7 +27,9 @@ const AgendamentoSchema = new mongoose.Schema({
     retornoAgendado:{ type: Date, default: null },
     site:{type:String, default:""},
     telefone:{type:String, default:""},
-    tempoGasto: { type: Number, default: 0 },   
+    tempoGasto: { type: Number, default: 0 }, 
+    resultado:{type:String, default:""},
+    texto:{type:String, default:""}
 });
 
 module.exports = mongoose.model('Agendamentos', AgendamentoSchema);

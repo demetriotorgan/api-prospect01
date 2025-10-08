@@ -214,6 +214,8 @@ module.exports.salvarAgendamento = async (req, res) => {
     site,
     telefone,
     tempoGasto,
+    resultado,
+    texto
   } = req.body;
 
   try {
@@ -248,6 +250,8 @@ module.exports.salvarAgendamento = async (req, res) => {
       site,
       telefone,
       tempoGasto,
+      resultado,
+      texto
     });
 
     await novoAgendamento.save();
