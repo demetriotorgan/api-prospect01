@@ -281,3 +281,34 @@ try {
   res.status(500).json({msg:'Erro ao excluir agendamentos'});
 }  
 };
+
+module.exports.excluirAgendamento = async(req,res)=>{
+ try {
+  const {empresaId} = req.params;
+
+  if(!empresaId){
+    return res.status(400).json({
+      msg:'Parametro empresaId é obrigatório'
+    });
+  }
+  //verifica se existe um registro com empresaId
+  const agendamentoExistente = await Agendamento.findOne({empresaId});
+  if(!agendamentoExistente){
+    return res.status(404).json({
+      msg:'Nenhum agendamento encontrado com o id fornecido'
+    });
+  }
+  //Exlcui o registro
+  await Agendamento.deleteOne({empresaId});
+  return res.status(200).json({
+    msg:'Agendamento excluido com sucesso'
+  });
+ } catch (error) {
+  console.error("❌ Erro ao excluir agendamento:", error);
+    return res.status(500).json({
+      success: false,
+      msg: "Erro interno ao excluir agendamento.",
+      error: error.message,
+    });
+ } 
+};
