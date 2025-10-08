@@ -196,7 +196,7 @@ agenda.forEach(i => {
 };
 
 // ---------Salvar Agendamentos-------
-module.exports.salvarAgendamento = async (req, res) => {
+module.exports.encerrarAgendamento = async (req, res) => {
   const {
     empresaId,
     nomeEmpresa,
@@ -270,7 +270,7 @@ module.exports.salvarAgendamento = async (req, res) => {
 
      return res.status(201).json({
       success: true,
-      msg: "Agendamento cadastrado com sucesso.",
+      msg: "Agendamento encerrado com sucesso.",
       agendamento: novoAgendamento,
       atualizacoes: {
         prospecAtualizado: !!prospecAtualizado,
@@ -279,10 +279,10 @@ module.exports.salvarAgendamento = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Erro ao cadastrar agendamento:", error);
+    console.error("Erro ao encerrar agendamento:", error);
     res.status(500).json({
       success: false,
-      msg: "Erro ao cadastrar agendamento.",
+      msg: "Erro ao encerrar agendamento.",
       error: error.message,
     });
   }
