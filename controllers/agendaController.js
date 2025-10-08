@@ -256,14 +256,14 @@ module.exports.salvarAgendamento = async (req, res) => {
 
     await novoAgendamento.save();
 
-    const prospecAtualizado = await Prospec.findByIdAndUpdate(
+    const prospecAtualizado = await Prospec.findOneAndUpdate(
       {empresaId},
       {indicador: "encerrado", atualizadoEm: new Date()},
       {new:true}
     );
 
-    const empresaAtualizada = await Estabelecimento.findByIdAndUpdate(
-      empresaId,
+    const empresaAtualizada = await Estabelecimento.findOneAndUpdate(
+      {_id: empresaId},
       {statusAtual:"encerrado"},
       {new:true}
     );
