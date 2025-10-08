@@ -2,6 +2,7 @@ const Prospec = require('../models/Prospec');
 const Usuario = require('../models/User');
 const Agendamento = require('../models/Agendamento')
 const Estabelecimento = require('../models/Estabelecimento');
+const mongoose = require('mongoose');
 
 // getAgenda com comparação por timezone (default: America/Sao_Paulo)
 module.exports.getAgenda = async (req, res) => {
@@ -250,7 +251,9 @@ module.exports.salvarAgendamento = async (req, res) => {
     resultado,
     texto
     });
-
+// console.log("📦 Dados recebidos para salvar agendamento:", req.body);
+// console.log("📦 Validando empresaId:", empresaId, "Valido?", mongoose.Types.ObjectId.isValid(empresaId));
+// console.log("📦 Validando usuarioId:", usuarioId, "Valido?", mongoose.Types.ObjectId.isValid(usuarioId));
     await novoAgendamento.save();
     
      return res.status(201).json({
