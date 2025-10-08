@@ -1,5 +1,6 @@
 const Prospec = require('../models/Prospec');
 const Usuario = require('../models/User');
+const Agendamento = require('../models/Agendamento')
 
 
 // getAgenda com comparação por timezone (default: America/Sao_Paulo)
@@ -192,4 +193,52 @@ agenda.forEach(i => {
     console.error(err);
     res.status(500).json({ error: "Erro ao buscar agenda dos próximos 7 dias" });
   }
+};
+
+// ---------Salvar Agendamentos-------
+module.exports.salvarAgendamento = async(req,res)=>{
+  const {
+      empresaId,
+      nomeEmpresa,
+      usuarioId,
+      usuarioNome,
+      criadoEm,
+      dataTime,
+      diasRestantes,
+      funil,
+      indicador,
+      interesse,
+      nicho,
+      observacao,
+      retornoAgendado,
+      site,
+      telefone,
+      tempoGasto,
+    } = req.body;
+
+  try {
+  const novoAgendamento = new Agendamento({
+     empresaId,
+      nomeEmpresa,
+      usuarioId,
+      usuarioNome,
+      criadoEm,
+      dataTime,
+      diasRestantes,
+      funil,
+      indicador,
+      interesse,
+      nicho,
+      observacao,
+      retornoAgendado,
+      site,
+      telefone,
+      tempoGasto,
+  });
+  await novoAgendamento.save();
+  res.status(201).json({msg:'Agendamento Cadastrado com sucesso'});
+  } catch (error) {
+  res.status(500).json({msg:'Erro ao cadastrar agendamento'});
+  }
+
 };
