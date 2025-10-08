@@ -196,8 +196,6 @@ agenda.forEach(i => {
 };
 
 // ---------Salvar Agendamentos-------
-const Agendamento = require('../models/Agendamento'); // ajuste o caminho conforme seu projeto
-
 module.exports.salvarAgendamento = async (req, res) => {
   const {
     empresaId,
