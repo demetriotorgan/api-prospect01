@@ -310,9 +310,9 @@ module.exports.excluirAgendamento = async(req,res)=>{
     });
   }
   //Exlcui o registro
-  const agendamentoDeletado = await Agendamento.deleteOne({empresaId});
-  const prospecDeletado = await Prospec.deleteOne({empresaId});
   const empresaDeletada =  await Estabelecimento.deleteOne({_id: empresaId});
+  const prospecDeletado = await Prospec.deleteOne({empresaId});
+  const agendamentoDeletado = await Agendamento.deleteOne({empresaId});  
 
   const resultado = {
     success: true,
