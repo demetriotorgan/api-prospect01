@@ -85,7 +85,7 @@ try {
     if(!empresaId){
         return res.status(400).json({msg:'Parametro empresaId é obrigatório'});
     }
-    const empresaExistente = await Estabelecimento.findOne({empresaId})
+    const empresaExistente = await Estabelecimento.findById({_id: empresaId})
     if(!empresaExistente){
         return res.status(400).json({msg:'Nehuma empresa encontrada'});
     }
