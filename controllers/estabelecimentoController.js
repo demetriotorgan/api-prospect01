@@ -1,4 +1,5 @@
 const Estabelecimento = require('../models/Estabelecimento');
+const mongoose = require("mongoose");
 
 //registra novo estabelecimento
 module.exports.adicionarListaEmpresas = async(req,res)=>{
@@ -79,22 +80,32 @@ module.exports.verificarEmpresas = async(req,res)=>{
     }
 };
 
-module.exports.exibirEmpresaPorId = async(req,res)=>{
-try {
-    const {empresaId} = req.params;
-   
-    if(!empresaId){
-        return res.status(400).json({msg:'Parametro empresaId é obrigatório'});
+module.exports.exibirEmpresaPorId = async (req, res) => {
+  try {
+    const { empresaId } = req.params;
+
+    // 🔹 Verifica se o parâmetro foi enviado
+    if (!empresaId) {
+      return res.status(400).json({ msg: "Parâmetro empresaId é obrigatório" });
     }
-     if (!mongoose.Types.ObjectId.isValid(empresaId)) {
-  return res.status(400).json({ msg: "Formato de empresaId inválido" });
-}
-    const empresaExistente = await Estabelecimento.findById(empresaId)
-    if(!empresaExistente){
-        return res.status(404).json({msg:'Nehuma empresa encontrada'});
+
+    // 🔹 Verifica se o ID é um ObjectId válido
+    if (!mongoose.Types.ObjectId.isValid(empresaId)) {
+      return res.status(400).json({ msg: "Formato de empresaId inválido" });
     }
-    return res.status(200).json(empresaExistente);
-} catch (error) {
-    return res.status(500).json({msg:'Erro ao buscar registro de empresa'});
-}
+
+    // 🔹 Busca o estabelecimento cujo _id corresponde ao empresaId do Agendamento
+    const estabelecimento = await Estabelecimento.findById(empresaId);
+
+    if (!estabelecimento) {
+      return res.status(404).json({ msg: "Nenhum estabelecimento encontrado para o empresaId fornecido." });
+    }
+
+    // 🔹 Retorna o documento encontrado
+    return res.status(200).json(estabelecimento);
+
+  } catch (error) {
+    console.error("❌ Erro ao buscar registro de estabelecimento:", error);
+    return res.status(500).json({ msg: "Erro interno ao buscar registro de estabelecimento." });
+  }
 };
