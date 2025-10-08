@@ -78,3 +78,19 @@ module.exports.verificarEmpresas = async(req,res)=>{
         res.status(500).json({erro:'Erro ao verificar empresas'});
     }
 };
+
+module.exports.exibirEmpresaPorId = async(req,res)=>{
+try {
+    const {empresaId} = req.params;
+    if(!empresaId){
+        return res.status(400).json({msg:'Parametro empresaId é obrigatório'});
+    }
+    const empresaExistente = await Estabelecimento.findOne({empresaId})
+    if(!empresaExistente){
+        return res.status(400).json({msg:'Nehuma empresa encontrada'});
+    }
+    return res.status(200).json(empresaExistente);
+} catch (error) {
+    return res.status(500).json({msg:'Erro ao buscar registro de empresa'});
+}
+};
