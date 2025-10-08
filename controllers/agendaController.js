@@ -196,7 +196,7 @@ agenda.forEach(i => {
 };
 
 // ---------Salvar Agendamentos-------
-module.exports.encerrarAgendamento = async (req, res) => {
+module.exports.salvarAgendamento = async (req, res) => {
   const {
     empresaId,
     nomeEmpresa,
