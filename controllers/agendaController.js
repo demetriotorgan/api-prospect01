@@ -256,10 +256,26 @@ module.exports.salvarAgendamento = async (req, res) => {
 
     await novoAgendamento.save();
 
-    res.status(201).json({
+    const prospecAtualizado = await Prospec.findByIdAndUpdate(
+      {empresaId},
+      {indicador: "encerrado", atualizadoEm: new Date()},
+      {new:true}
+    );
+
+    const empresaAtualizada = await Estabelecimento.findByIdAndUpdate(
+      empresaId,
+      {statusAtual:"encerrado"},
+      {new:true}
+    );
+
+     return res.status(201).json({
       success: true,
       msg: "Agendamento cadastrado com sucesso.",
       agendamento: novoAgendamento,
+      atualizacoes: {
+        prospecAtualizado: !!prospecAtualizado,
+        empresaAtualizada: !!empresaAtualizada,
+      },
     });
 
   } catch (error) {

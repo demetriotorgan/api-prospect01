@@ -14,7 +14,8 @@ const ProspecSchema = new mongoose.Schema({
       "ligou-sem-interesse", 
       "ligou-pediu-retorno", 
       "ligou-agendou-reuniao", 
-      "ligou-nao-respondeu"
+      "ligou-nao-respondeu",
+      "encerrado",
     ], 
     default: "nao-prospectado"
   },
