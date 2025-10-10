@@ -275,7 +275,7 @@ module.exports.salvarAgendamento = async (req, res) => {
 module.exports.listarAgendamentosSalvos = async(req,res)=>{
 try {
   const listaAgendamentosSalvos = await Agendamento.find()
-  .sort({criadoEm:-1})
+  .sort({_id:-1})
   .exec();
   res.status(200).json(listaAgendamentosSalvos)
 } catch (error) {
