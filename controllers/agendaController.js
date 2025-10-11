@@ -272,39 +272,50 @@ module.exports.salvarAgendamento = async (req, res) => {
   }
 };
 
-module.exports.listarAgendamentosSalvos = async(req,res)=>{
-try {
-  const listaAgendamentosSalvos = await Agendamento.find()
-  .sort({_id:-1})
-  .populate('usuarioId', 'email')
-  .exec();
+module.exports.listarAgendamentosSalvos = async (req, res) => {
+  try {
+    const listaAgendamentosSalvos = await Agendamento.find()
+      .sort({ _id: -1 })
+      .populate("usuarioId", "email")
+      .exec();
 
-  const agora = new Date();  
-  
-  const listaComInfos = listaAgendamentosSalvos.map(a=>{
-    const obj = a.toObject();
-    
-    let tempoRestanteStr = 'Agendamento Expirado';     
+    const agora = new Date();  
+
+    const listaComInfos = listaAgendamentosSalvos.map(a => {
+      const obj = a.toObject();
+
+      let tempoRestanteStr = 'Agendamento Expirado';
+
       if (a.retornoAgendado) {
-        const retorno = new Date(a.retornoAgendado);
+        // Converte retornoAgendado para Date no fuso local (São Paulo)
+        const retorno = new Date(
+          new Date(a.retornoAgendado).toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
+        );
+
         const diffMs = retorno - agora;
         const diffDias = diffMs / (1000 * 60 * 60 * 24);
-         if (diffDias > 1) {
+
+        if (diffMs <= 0) {
+          tempoRestanteStr = 'Agendamento Expirado';
+        } else if (diffDias >= 1) {
           tempoRestanteStr = `Faltam ${Math.floor(diffDias)} dias`;
-        } else if (diffDias > 0) {
+        } else {
           tempoRestanteStr = 'Hoje';
         }
-      }     
-return {
+      }
+
+      return {
         ...obj,
         emailUsuario: a.usuarioId?.email || null,
-        tempoRestante: tempoRestanteStr, // ✅ adiciona novo campo
+        tempoRestante: tempoRestanteStr,
       };
-  });
-  res.status(200).json(listaComInfos)
-} catch (error) {
-  res.status(500).json({msg:'Erro ao listar agendamentos salvos'})
-}
+    });
+
+    res.status(200).json(listaComInfos);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: 'Erro ao listar agendamentos salvos' });
+  }
 };
 
 module.exports.excluirListaAgendamento = async(req,res)=>{
