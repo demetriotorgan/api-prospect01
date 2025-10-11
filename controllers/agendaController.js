@@ -272,35 +272,41 @@ module.exports.salvarAgendamento = async (req, res) => {
   }
 };
 
+// Função para converter uma data UTC para hora de São Paulo
+function toSaoPauloDate(utcDate) {
+  const date = new Date(utcDate);
+
+  // Offset de SP: UTC-3
+  const offsetSP = -3 * 60; // minutos
+  const localOffset = date.getTimezoneOffset(); // minutos
+  const diffMinutes = offsetSP - localOffset;
+
+  date.setMinutes(date.getMinutes() + diffMinutes);
+  return date;
+}
+
 module.exports.listarAgendamentosSalvos = async (req, res) => {
   try {
     const listaAgendamentosSalvos = await Agendamento.find()
       .sort({ _id: -1 })
-      .populate("usuarioId", "email")
+      .populate('usuarioId', 'email')
       .exec();
 
-    const agora = new Date();  
+    const agora = toSaoPauloDate(new Date());
 
     const listaComInfos = listaAgendamentosSalvos.map(a => {
       const obj = a.toObject();
-
       let tempoRestanteStr = 'Agendamento Expirado';
 
       if (a.retornoAgendado) {
-        // Converte retornoAgendado para Date no fuso local (São Paulo)
-        const retorno = new Date(
-          new Date(a.retornoAgendado).toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
-        );
-
-        const diffMs = retorno - agora;
-        const diffDias = diffMs / (1000 * 60 * 60 * 24);
+        const retornoSP = toSaoPauloDate(a.retornoAgendado);
+        const diffMs = retornoSP - agora;
 
         if (diffMs <= 0) {
           tempoRestanteStr = 'Agendamento Expirado';
-        } else if (diffDias >= 1) {
-          tempoRestanteStr = `Faltam ${Math.floor(diffDias)} dias`;
         } else {
-          tempoRestanteStr = 'Hoje';
+          const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          tempoRestanteStr = diffDias >= 1 ? `Faltam ${diffDias} dias` : 'Hoje';
         }
       }
 
@@ -317,6 +323,7 @@ module.exports.listarAgendamentosSalvos = async (req, res) => {
     res.status(500).json({ msg: 'Erro ao listar agendamentos salvos' });
   }
 };
+
 
 module.exports.excluirListaAgendamento = async(req,res)=>{
 try {
