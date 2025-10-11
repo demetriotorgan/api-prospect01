@@ -1,7 +1,4 @@
-const Prospec = require('../models/Prospec');
-const Usuario = require('../models/User');
 const Agendamento = require('../models/Agendamento')
-const Estabelecimento = require('../models/Estabelecimento');
 const mongoose = require('mongoose');
 
 // ---------Salvar Agendamentos-------
@@ -146,5 +143,38 @@ try {
   console.error(error);
   res.status(500).json({msg:'Erro ao excluir agendamentos'});
 }  
+};
+
+module.exports.encerrarAgendamento = async(req,res)=>{
+  try {
+    const { id } = req.params; // o ID vem da rota /agendamentos/:id
+    const { resultado, texto } = req.body; // os novos valores vêm do corpo da requisição
+
+    if (!id) {
+      return res.status(400).json({ msg: "O campo _id do agendamento é obrigatório." });
+    }
+
+    // Verifica se o agendamento existe
+    const agendamentoExistente = await Agendamento.findById(id);
+    if (!agendamentoExistente) {
+      return res.status(404).json({ msg: "Agendamento não encontrado." });
+    }
+
+    // Atualiza apenas os campos desejados
+    agendamentoExistente.resultado = resultado || agendamentoExistente.resultado;
+    agendamentoExistente.texto = texto || agendamentoExistente.texto;
+
+    // Salva no banco
+    const agendamentoAtualizado = await agendamentoExistente.save();
+
+    res.status(200).json({
+      msg: "Agendamento atualizado com sucesso!",
+      agendamento: agendamentoAtualizado,
+    });
+
+  } catch (error) {
+    console.error("Erro ao encerrar agendamento:", error);
+    res.status(500).json({ msg: "Erro interno ao encerrar agendamento." });
+  }
 };
 
