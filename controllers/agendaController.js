@@ -213,7 +213,7 @@ module.exports.salvarAgendamento = async (req, res) => {
     site,
     funil,        
     resultado,
-    texto
+    texto,    
   } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(empresaId)) {
@@ -276,8 +276,32 @@ module.exports.listarAgendamentosSalvos = async(req,res)=>{
 try {
   const listaAgendamentosSalvos = await Agendamento.find()
   .sort({_id:-1})
+  .populate('usuarioId', 'email')
   .exec();
-  res.status(200).json(listaAgendamentosSalvos)
+
+  const agora = new Date();  
+  
+  const listaComInfos = listaAgendamentosSalvos.map(a=>{
+    const obj = a.toObject();
+    
+    let tempoRestanteStr = 'Agendamento Expirado';     
+      if (a.retornoAgendado) {
+        const retorno = new Date(a.retornoAgendado);
+        const diffMs = retorno - agora;
+        const diffDias = diffMs / (1000 * 60 * 60 * 24);
+         if (diffDias > 1) {
+          tempoRestanteStr = `Faltam ${Math.floor(diffDias)} dias`;
+        } else if (diffDias > 0) {
+          tempoRestanteStr = 'Hoje';
+        }
+      }     
+return {
+        ...obj,
+        emailUsuario: a.usuarioId?.email || null,
+        tempoRestante: tempoRestanteStr, // ✅ adiciona novo campo
+      };
+  });
+  res.status(200).json(listaComInfos)
 } catch (error) {
   res.status(500).json({msg:'Erro ao listar agendamentos salvos'})
 }

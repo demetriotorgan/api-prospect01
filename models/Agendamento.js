@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const AgendamentoSchema = new mongoose.Schema({
     empresaId: {type: mongoose.Schema.Types.ObjectId, ref:"Estabelecimento", required:true},
     nomeEmpresa: {type:String, default:""},
-    usuarioId: {type:mongoose.Schema.Types.ObjectId, ref:"Usuario", required: true},
+    usuarioId: {type:mongoose.Schema.Types.ObjectId, ref:"User", required: true},
     indicador: { 
     type: String, 
     enum: [
@@ -26,7 +26,7 @@ const AgendamentoSchema = new mongoose.Schema({
     site:{type:String, default:""},    
     funil:{type:String, default:''},   
     resultado:{type:String, default:""},
-    texto:{type:String, default:""}
+    texto:{type:String, default:""},    
 });
 
 module.exports = mongoose.model('Agendamentos', AgendamentoSchema);
