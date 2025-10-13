@@ -147,34 +147,43 @@ try {
 
 module.exports.encerrarAgendamento = async(req,res)=>{
   try {
-    const { id } = req.params; // o ID vem da rota /agendamentos/:id
-    const { resultado, texto } = req.body; // os novos valores vêm do corpo da requisição
+  const { id } = req.params;
+  const {
+    resultado,
+    texto,
+    retornoAgendado,
+    dataTime,
+    indicador
+  } = req.body;
 
-    if (!id) {
-      return res.status(400).json({ msg: "O campo _id do agendamento é obrigatório." });
-    }
-
-    // Verifica se o agendamento existe
-    const agendamentoExistente = await Agendamento.findById(id);
-    if (!agendamentoExistente) {
-      return res.status(404).json({ msg: "Agendamento não encontrado." });
-    }
-
-    // Atualiza apenas os campos desejados
-    agendamentoExistente.resultado = resultado || agendamentoExistente.resultado;
-    agendamentoExistente.texto = texto || agendamentoExistente.texto;
-
-    // Salva no banco
-    const agendamentoAtualizado = await agendamentoExistente.save();
-
-    res.status(200).json({
-      msg: "Agendamento atualizado com sucesso!",
-      agendamento: agendamentoAtualizado,
-    });
-
-  } catch (error) {
-    console.error("Erro ao encerrar agendamento:", error);
-    res.status(500).json({ msg: "Erro interno ao encerrar agendamento." });
+  if (!id) {
+    return res.status(400).json({ msg: "O campo _id do agendamento é obrigatório." });
   }
+
+  // Verifica se o agendamento existe
+  const agendamentoExistente = await Agendamento.findById(id);
+  if (!agendamentoExistente) {
+    return res.status(404).json({ msg: "Agendamento não encontrado." });
+  }
+
+  // Atualiza apenas os campos que vierem preenchidos
+  if (resultado !== undefined) agendamentoExistente.resultado = resultado;
+  if (texto !== undefined) agendamentoExistente.texto = texto;
+  if (retornoAgendado) agendamentoExistente.retornoAgendado = retornoAgendado;
+  if (dataTime) agendamentoExistente.dataTime = dataTime;
+  if (indicador) agendamentoExistente.indicador = indicador;
+
+  // Salva no banco
+  const agendamentoAtualizado = await agendamentoExistente.save();
+
+  res.status(200).json({
+    msg: "Agendamento atualizado com sucesso!",
+    agendamento: agendamentoAtualizado,
+  });
+
+} catch (error) {
+  console.error("Erro ao encerrar agendamento:", error);
+  res.status(500).json({ msg: "Erro interno ao encerrar agendamento." });
+}
 };
 
