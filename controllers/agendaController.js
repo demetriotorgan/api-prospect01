@@ -1,4 +1,5 @@
-const Agendamento = require('../models/Agendamento')
+const Agendamento = require('../models/Agendamento');
+const {calcularTempoRestante, toSaoPauloDate} = require('../util/calcularTempoRestante');
 const mongoose = require('mongoose');
 
 // ---------Salvar Agendamentos-------
@@ -76,19 +77,6 @@ module.exports.salvarAgendamento = async (req, res) => {
 });
   }
 };
-
-// Função para converter uma data UTC para hora de São Paulo
-function toSaoPauloDate(utcDate) {
-  const date = new Date(utcDate);
-
-  // Offset de SP: UTC-3
-  const offsetSP = -3 * 60; // minutos
-  const localOffset = date.getTimezoneOffset(); // minutos
-  const diffMinutes = offsetSP - localOffset;
-
-  date.setMinutes(date.getMinutes() + diffMinutes);
-  return date;
-}
 
 module.exports.listarAgendamentosSalvos = async (req, res) => {
   try {
@@ -176,10 +164,17 @@ module.exports.encerrarAgendamento = async(req,res)=>{
   // Salva no banco
   const agendamentoAtualizado = await agendamentoExistente.save();
 
-  res.status(200).json({
-    msg: "Agendamento atualizado com sucesso!",
-    agendamento: agendamentoAtualizado,
-  });
+  const tempoRestante = calcularTempoRestante(agendamentoAtualizado.retornoAgendado);
+
+    // ✅ Retorna o mesmo formato da listagem
+    return res.status(200).json({
+      sucesso: true,
+      msg: "Agendamento atualizado com sucesso!",
+      agendamento: {
+        ...agendamentoAtualizado.toObject(),
+        tempoRestante: tempoRestante,
+      },
+    });
 
 } catch (error) {
   console.error("Erro ao encerrar agendamento:", error);
