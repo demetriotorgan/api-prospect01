@@ -162,17 +162,22 @@ module.exports.encerrarAgendamento = async(req,res)=>{
   if (indicador) agendamentoExistente.indicador = indicador;
 
   // Salva no banco
-  const agendamentoAtualizado = await agendamentoExistente.save();
+  await agendamentoExistente.save();
 
-  const tempoRestante = calcularTempoRestante(agendamentoAtualizado.retornoAgendado);
+   // 🔄 Popula o campo usuarioId para ter acesso ao email
+    const agendamentoPopulado = await Agendamento.findById(id).populate('usuarioId', 'email');
+
+
+  const tempoRestante = calcularTempoRestante(agendamentoPopulado.retornoAgendado);
 
     // ✅ Retorna o mesmo formato da listagem
     return res.status(200).json({
       sucesso: true,
       msg: "Agendamento atualizado com sucesso!",
       agendamento: {
-        ...agendamentoAtualizado.toObject(),
+        ...agendamentoPopulado.toObject(),
         tempoRestante: tempoRestante,
+        emailUsuario: agendamentoPopulado.usuarioId?.email || null
       },
     });
 
