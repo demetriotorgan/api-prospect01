@@ -94,3 +94,51 @@ module.exports.ultimoRegistroPorNicho = async(req, res)=>{
     res.status(500).json({ msg: 'Erro ao buscar último registro', erro: error.message });
   }
 };
+
+//-----------Atualiza uma prospecção
+module.exports.atualizarProspec = async(req, res)=>{
+try {
+  const { id } = req.params; // ID da prospecção a ser atualizada
+    const {
+      indicador,
+      observacao,
+      interesse,
+      retornoAgendado,
+      dataTime,
+      telefone,
+      site,
+      funil
+    } = req.body;
+
+    // Valida se o ID foi enviado
+    if (!id) {
+      return res.status(400).json({ erro: "ID da prospecção não fornecido" });
+    }
+
+    // Busca e atualiza o registro, retornando o novo documento
+    const prospecAtualizada = await Prospec.findByIdAndUpdate(
+      id,
+      {
+        indicador,
+        observacao,
+        interesse,
+        retornoAgendado,
+        dataTime,
+        telefone,
+        site,
+        funil,
+        atualizadoEm: new Date()
+      },
+      { new: true, runValidators: true } // new:true retorna o documento atualizado, runValidators garante validações do schema
+    );
+
+    if (!prospecAtualizada) {
+      return res.status(404).json({ erro: "Prospecção não encontrada" });
+    }
+
+    return res.status(200).json(prospecAtualizada);
+} catch (error) {
+  console.error('Erro ao atualizar prospecção:', error);
+  return res.status(500).json({ erro: "Erro ao atualizar prospecção" });
+}
+};
