@@ -1,5 +1,6 @@
 const Prospec = require('../models/Prospec');
 const Empresa = require('../models/Estabelecimento');
+const mongoose = require('mongoose');
 
 //registra nova prospecção
 module.exports.adicionarProspeccao = async(req,res)=>{
@@ -100,6 +101,7 @@ module.exports.atualizarProspec = async(req, res)=>{
 try {
   const { id } = req.params; // ID da prospecção a ser atualizada
     const {
+      empresaId,
       indicador,
       observacao,
       interesse,
@@ -119,6 +121,7 @@ try {
     const prospecAtualizada = await Prospec.findByIdAndUpdate(
       id,
       {
+        empresaId,
         indicador,
         observacao,
         interesse,
@@ -136,7 +139,21 @@ try {
       return res.status(404).json({ erro: "Prospecção não encontrada" });
     }
 
-    return res.status(200).json(prospecAtualizada);
+    
+    // Atualiza o status da empresa relacionada
+    let empresaAtualizada = null;
+    if (empresaId && indicador) {      
+      empresaAtualizada = await Empresa.findByIdAndUpdate(
+        empresaId,
+        { statusAtual: indicador},
+        { new: true }
+      );
+    }
+   
+     return res.status(200).json({
+      prospecAtualizada,
+      empresaAtualizada
+    });
 } catch (error) {
   console.error('Erro ao atualizar prospecção:', error);
   return res.status(500).json({ erro: "Erro ao atualizar prospecção" });
