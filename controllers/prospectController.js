@@ -106,9 +106,7 @@ try {
       observacao,
       interesse,
       retornoAgendado,
-      dataTime,
-      telefone,
-      site,
+      dataTime,      
       funil
     } = req.body;
 
@@ -126,11 +124,8 @@ try {
         observacao,
         interesse,
         retornoAgendado,
-        dataTime,
-        telefone,
-        site,
-        funil,
-        atualizadoEm: new Date()
+        dataTime,        
+        funil        
       },
       { new: true, runValidators: true } // new:true retorna o documento atualizado, runValidators garante validações do schema
     );
