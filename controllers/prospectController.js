@@ -168,7 +168,7 @@ try {
           telefone: empresa.telefone,
           site: empresa.site,
           funil,
-          resultado: indicador,
+          resultado: "",
           texto: observacao || "",
         },
         { new: true, upsert: true, runValidators: true } // cria se não existir
