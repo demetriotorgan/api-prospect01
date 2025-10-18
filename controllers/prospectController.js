@@ -1,5 +1,6 @@
 const Prospec = require('../models/Prospec');
 const Empresa = require('../models/Estabelecimento');
+const Agendamento = require('../models/Agendamento');
 const mongoose = require('mongoose');
 
 //registra nova prospecção
@@ -133,16 +134,51 @@ try {
     if (!prospecAtualizada) {
       return res.status(404).json({ erro: "Prospecção não encontrada" });
     }
-
+    // 🟢 Busca empresa completa (com nome, telefone, site etc.)
+    const empresa = await Empresa.findById(empresaId);
     
-    // Atualiza o status da empresa relacionada
-    let empresaAtualizada = null;
-    if (empresaId && indicador) {      
-      empresaAtualizada = await Empresa.findByIdAndUpdate(
-        empresaId,
-        { statusAtual: indicador},
-        { new: true }
+    if (!empresa) {
+      return res.status(404).json({ erro: "Empresa não encontrada" });
+    }
+
+    // Atualiza apenas o status da empresa
+    const empresaAtualizada = await Empresa.findByIdAndUpdate(
+      empresaId,
+      { statusAtual: indicador },
+      { new: true }
+    );
+
+    // 3️⃣ Lógica de agendamento
+    let agendamentoAtualizado = null;
+    if (retornoAgendado && dataTime) {
+      // ➕ Cria ou atualiza agendamento existente da empresa
+      agendamentoAtualizado = await Agendamento.findOneAndUpdate(
+        { empresaId }, // busca pelo id da empresa
+        {
+          empresaId,
+          nomeEmpresa: empresa.nome,
+          usuarioId: prospecAtualizada.usuarioId,
+          indicador,
+          nicho: empresa.tipo,
+          observacao,
+          tempoGasto: prospecAtualizada.tempoGasto || 0,
+          interesse,
+          retornoAgendado,
+          dataTime,
+          telefone: empresa.telefone,
+          site: empresa.site,
+          funil,
+          resultado: indicador,
+          texto: observacao || "",
+        },
+        { new: true, upsert: true, runValidators: true } // cria se não existir
       );
+    } else {
+      // ❌ Se não há agendamento definido, remove o existente (se houver)
+      const agendamentoExistente = await Agendamento.findOne({ empresaId });
+      if (agendamentoExistente) {
+        await Agendamento.deleteOne({ empresaId });
+      }
     }
    
      return res.status(200).json({
