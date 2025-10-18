@@ -1,4 +1,5 @@
 const Agendamento = require('../models/Agendamento');
+const Prospec = require('../models/Prospec');
 const {calcularTempoRestante, toSaoPauloDate} = require('../util/calcularTempoRestante');
 const mongoose = require('mongoose');
 
@@ -137,6 +138,7 @@ module.exports.encerrarAgendamento = async(req,res)=>{
   try {
   const { id } = req.params;
   const {
+    empresaId,
     resultado,
     texto,
     retornoAgendado,
@@ -163,6 +165,25 @@ module.exports.encerrarAgendamento = async(req,res)=>{
 
   // Salva no banco
   await agendamentoExistente.save();
+
+  // 🔄 Atualiza também o campo "resultado" em Prospec, se empresaId for fornecido
+    if (empresaId) {
+      const prospecAtualizada = await Prospec.findOneAndUpdate(
+        { empresaId: empresaId },
+        { resultado: resultado || "" },
+        { new: true }
+      );
+
+      if (!prospecAtualizada) {
+        console.warn(`⚠️ Nenhuma Prospec encontrada para empresaId ${empresaId}`);
+      } else {
+        console.log(
+          `✅ Prospec ${prospecAtualizada._id} atualizada com resultado: ${resultado}`
+        );
+      }
+    } else {
+      console.warn("⚠️ Nenhum empresaId foi enviado no corpo da requisição.");
+    }
 
    // 🔄 Popula o campo usuarioId para ter acesso ao email
     const agendamentoPopulado = await Agendamento.findById(id).populate('usuarioId', 'email');
