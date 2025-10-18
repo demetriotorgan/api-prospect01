@@ -117,18 +117,6 @@ try {
       return res.status(400).json({ erro: "ID da prospecção não fornecido" });
     }
 
-    // 🕒 Ajuste de data para timezone de São Paulo (UTC-3)
-    let retornoSP = retornoAgendado ? new Date(retornoAgendado) : null;
-    let dataTimeSP = dataTime ? new Date(dataTime) : null;
-
-    if (retornoSP) {
-      // converte a data para o horário de SP antes de salvar
-      retornoSP = toSaoPauloDate(retornoSP);
-    }
-    if (dataTimeSP) {
-      dataTimeSP = toSaoPauloDate(dataTimeSP);
-    }
-
     // Busca e atualiza o registro, retornando o novo documento
     const prospecAtualizada = await Prospec.findByIdAndUpdate(
       id,
@@ -163,7 +151,7 @@ try {
 
     // 3️⃣ Lógica de agendamento
     let agendamentoAtualizado = null;
-    if (retornoSP  && dataTimeSP) {
+    if (retornoAgendado  && dataTime) {
       // ➕ Cria ou atualiza agendamento existente da empresa
       agendamentoAtualizado = await Agendamento.findOneAndUpdate(
         { empresaId }, // busca pelo id da empresa
@@ -176,8 +164,8 @@ try {
           observacao,
           tempoGasto: prospecAtualizada.tempoGasto || 0,
           interesse,
-          retornoAgendado:dataTimeSP,
-          dataTime:dataTimeSP,
+          retornoAgendado,
+          dataTime,
           telefone: empresa.telefone,
           site: empresa.site,
           funil,
