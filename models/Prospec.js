@@ -31,7 +31,19 @@ const ProspecSchema = new mongoose.Schema({
   dataTime:{type:Date, default:""},
   telefone:{type:String, default:""},
   site:{type:String, default:""},
-  funil: { type: String, enum: ["topo", "meio", "fundo"], default: "topo" }
+  funil: { type: String, enum: ["topo", "meio", "fundo"], default: "topo" },
+  resultado: { 
+    type: String, 
+    enum: [
+      "nao-prospectado", 
+      "ligou-nao-era-dono", 
+      "ligou-sem-interesse", 
+      "ligou-pediu-retorno", 
+      "ligou-agendou-reuniao", 
+      "ligou-nao-respondeu"
+    ], 
+    default: ""
+  },
 });
 
 // Atualiza automaticamente o campo atualizadoEm
